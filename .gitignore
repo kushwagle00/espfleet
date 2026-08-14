@@ -1,0 +1,9 @@
+/dist/
+/espfleet
+/espfleet.exe
+/fleet.yaml
+*.bin
+*.elf
+*.test
+coverage.out
+.DS_Store

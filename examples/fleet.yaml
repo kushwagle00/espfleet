@@ -1,0 +1,32 @@
+# Copy this file and replace every port, firmware path, and offset.
+# These are illustrative app-only profiles, not universal board layouts.
+# Correct bootloaders and partition tables must already exist for app-only updates.
+version: 1
+profiles:
+  sensor-s3:
+    chip: esp32s3
+    reset: default # USB-to-UART bridge; use usb-jtag for native USB Serial/JTAG.
+    baud: 460800
+    images:
+      - file: firmware/sensor-app.bin
+        offset: 0x10000 # Replace with the address from your build.
+  camera-s3:
+    chip: esp32s3
+    reset: usb-jtag
+    baud: 460800
+    images:
+      - file: firmware/camera-app.bin
+        offset: 0x10000 # Not a tested ESP32-S3 CAM profile.
+devices:
+  - name: door-01
+    port: COM8 # Linux: /dev/ttyUSB0; macOS: /dev/cu.usbserial-...
+    profile: sensor-s3
+    groups: [sensors, downstairs]
+  - name: door-02
+    port: COM9
+    profile: sensor-s3
+    groups: [sensors, upstairs]
+  - name: camera-01
+    port: COM10
+    profile: camera-s3
+    groups: [cameras]

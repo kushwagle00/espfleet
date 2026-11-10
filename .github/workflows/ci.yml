@@ -1,0 +1,47 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          cache: true
+      - name: Check formatting
+        shell: bash
+        run: test -z "$(gofmt -l main.go internal)"
+      - name: Check module consistency
+        shell: bash
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+      - run: go vet ./...
+      - run: go test ./...
+      - name: Race detection
+        if: runner.os == 'Linux'
+        run: go test -race ./...
+      - name: Build executable and include notices
+        shell: bash
+        run: |
+          mkdir -p dist
+          suffix=''
+          if [ "$RUNNER_OS" = Windows ]; then suffix='.exe'; fi
+          go build -trimpath -o "dist/espfleet${suffix}" .
+          cp LICENSE README.md THIRD_PARTY_NOTICES.md dist/
+          cp -R third_party dist/
+          "./dist/espfleet${suffix}" version --json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: espfleet-${{ runner.os }}-${{ runner.arch }}
+          path: dist/
